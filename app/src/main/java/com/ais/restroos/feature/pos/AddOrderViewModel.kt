@@ -383,11 +383,24 @@ class AddOrderViewModel(
                     newCart[posItem.id] = CartItem(posItem, orderItem.quantity)
                 }
 
+                val restoredCust = if (!heldOrder.customerPhone.isNullOrBlank()) {
+                    customerRepo.findCustomerByMobile(heldOrder.customerPhone)
+                        ?: Customer(
+                            id = "CUST-${heldOrder.customerPhone}",
+                            name = heldOrder.customerName ?: "Customer",
+                            mobileNumber = heldOrder.customerPhone,
+                            isRegular = false
+                        )
+                } else null
+
                 _uiState.update {
                     it.copy(
                         editingOrderId = heldOrder.orderId,
                         tableNumber = heldOrder.tableNumber ?: "G1",
                         cart = newCart,
+                        customerName = heldOrder.customerName.orEmpty(),
+                        customerPhone = heldOrder.customerPhone.orEmpty(),
+                        attachedCustomer = restoredCust,
                         occupiedTablePrompt = null
                     )
                 }

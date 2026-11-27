@@ -8,21 +8,31 @@ import com.ais.restroos.data.remote.dtos.ApiResponseWrapper
 import com.ais.restroos.data.remote.dtos.AuthData
 import com.ais.restroos.data.remote.dtos.CategorySyncDto
 import com.ais.restroos.data.remote.dtos.CreatePurchaseRequest
+import com.ais.restroos.data.remote.dtos.CreateStaffRequest
 import com.ais.restroos.data.remote.dtos.CustomerSyncDto
 import com.ais.restroos.data.remote.dtos.DailyHisaabSummaryDto
 import com.ais.restroos.data.remote.dtos.DeviceSyncDto
 import com.ais.restroos.data.remote.dtos.ItemSalesReportDto
+import com.ais.restroos.data.remote.dtos.KhataEntryDto
+import com.ais.restroos.data.remote.dtos.KhataRecordRequest
 import com.ais.restroos.data.remote.dtos.LoginRequest
 import com.ais.restroos.data.remote.dtos.MenuItemSyncDto
 import com.ais.restroos.data.remote.dtos.OrderSyncDto
 import com.ais.restroos.data.remote.dtos.PurchaseItemDto
+import com.ais.restroos.data.remote.dtos.ReceiptSettingsDto
 import com.ais.restroos.data.remote.dtos.RegisterRequest
+import com.ais.restroos.data.remote.dtos.RestaurantProfileDto
 import com.ais.restroos.data.remote.dtos.SalesReportSummaryDto
+import com.ais.restroos.data.remote.dtos.StaffListResponseDto
+import com.ais.restroos.data.remote.dtos.StaffMemberDto
 import com.ais.restroos.data.remote.dtos.StockReportDto
+import com.ais.restroos.data.remote.dtos.SubscriptionDto
+import com.ais.restroos.data.remote.dtos.SubscriptionPlanDto
 import com.ais.restroos.data.remote.dtos.SyncPullResult
 import com.ais.restroos.data.remote.dtos.SyncPushRequest
 import com.ais.restroos.data.remote.dtos.SyncPushResult
 import com.ais.restroos.data.remote.dtos.TableSyncDto
+import com.ais.restroos.data.remote.dtos.UpdateRestaurantProfileRequest
 import com.ais.restroos.data.sync.SyncManager
 import com.ais.restroos.data.sync.SyncState
 import okhttp3.RequestBody
@@ -229,6 +239,15 @@ class AuthAndSyncIntegrationTest {
         override suspend fun getCustomers(): Response<ApiResponseWrapper<List<CustomerSyncDto>>> =
             Response.success(ApiResponseWrapper("success", "ok", emptyList()))
 
+        override suspend fun saveCustomer(request: CustomerSyncDto): Response<ApiResponseWrapper<CustomerSyncDto>> =
+            Response.success(ApiResponseWrapper("success", "ok", request))
+
+        override suspend fun getKhataLedger(mobile: String?): Response<ApiResponseWrapper<List<KhataEntryDto>>> =
+            Response.success(ApiResponseWrapper("success", "ok", emptyList()))
+
+        override suspend fun recordKhataEntry(request: KhataRecordRequest): Response<ApiResponseWrapper<Map<String, Any?>>> =
+            Response.success(ApiResponseWrapper("success", "ok", emptyMap()))
+
         override suspend fun createCustomer(request: CustomerSyncDto): Response<ApiResponseWrapper<CustomerSyncDto>> =
             Response.success(ApiResponseWrapper("success", "ok", request))
 
@@ -238,7 +257,13 @@ class AuthAndSyncIntegrationTest {
         override suspend fun createOrder(request: OrderSyncDto): Response<ApiResponseWrapper<OrderSyncDto>> =
             Response.success(ApiResponseWrapper("success", "ok", request))
 
+        override suspend fun cancelOrder(id: String): Response<ApiResponseWrapper<Any?>> =
+            Response.success(ApiResponseWrapper("success", "ok", null))
+
         override suspend fun clearOrders(): Response<ApiResponseWrapper<Any?>> =
+            Response.success(ApiResponseWrapper("success", "ok", null))
+
+        override suspend fun softDeleteOrder(id: String, queryId: String): Response<ApiResponseWrapper<Any?>> =
             Response.success(ApiResponseWrapper("success", "ok", null))
 
         override suspend fun pushSync(idempotencyKey: String, request: SyncPushRequest): Response<ApiResponseWrapper<SyncPushResult>> =
@@ -271,10 +296,40 @@ class AuthAndSyncIntegrationTest {
         override suspend fun createPurchase(request: CreatePurchaseRequest): Response<ApiResponseWrapper<PurchaseItemDto>> =
             Response.success(ApiResponseWrapper("success", "ok", PurchaseItemDto("PUR-1", request.item_name, request.category, request.quantity, request.unit, request.vendor_name ?: "", request.amount, request.payment_mode, request.expense_type, request.purchase_date, request.notes ?: "")))
 
-        override suspend fun deletePurchase(id: String): Response<ApiResponseWrapper<Unit>> =
+        override suspend fun deletePurchase(id: String, queryId: String): Response<ApiResponseWrapper<Unit>> =
             Response.success(ApiResponseWrapper("success", "ok", Unit))
 
         override suspend fun getDailySummary(date: String?): Response<ApiResponseWrapper<DailyHisaabSummaryDto>> =
             Response.success(ApiResponseWrapper("success", "ok", DailyHisaabSummaryDto(date ?: "2026-11-24", 0.0, 0, 0.0, 0.0, 0.0, 0, 0.0)))
+
+        override suspend fun getRestaurantProfile(): Response<ApiResponseWrapper<RestaurantProfileDto>> =
+            Response.success(ApiResponseWrapper("success", "ok", RestaurantProfileDto()))
+
+        override suspend fun updateRestaurantProfile(request: UpdateRestaurantProfileRequest): Response<ApiResponseWrapper<RestaurantProfileDto>> =
+            Response.success(ApiResponseWrapper("success", "ok", RestaurantProfileDto()))
+
+        override suspend fun getStaffList(): Response<ApiResponseWrapper<StaffListResponseDto>> =
+            Response.success(ApiResponseWrapper("success", "ok", StaffListResponseDto()))
+
+        override suspend fun createStaff(request: CreateStaffRequest): Response<ApiResponseWrapper<StaffMemberDto>> =
+            Response.success(ApiResponseWrapper("success", "ok", StaffMemberDto(id = "1", name = request.name, email = request.email, phone = request.phone, role = request.role)))
+
+        override suspend fun deleteStaff(id: String, queryId: String): Response<ApiResponseWrapper<Any?>> =
+            Response.success(ApiResponseWrapper("success", "ok", null))
+
+        override suspend fun getActiveSubscription(): Response<ApiResponseWrapper<SubscriptionDto>> =
+            Response.success(ApiResponseWrapper("success", "ok", SubscriptionDto()))
+
+        override suspend fun getSubscriptionPlans(): Response<ApiResponseWrapper<List<SubscriptionPlanDto>>> =
+            Response.success(ApiResponseWrapper("success", "ok", emptyList()))
+
+        override suspend fun getReceiptSettings(): Response<ApiResponseWrapper<ReceiptSettingsDto>> =
+            Response.success(ApiResponseWrapper("success", "ok", ReceiptSettingsDto()))
+
+        override suspend fun saveReceiptSettings(request: ReceiptSettingsDto): Response<ApiResponseWrapper<ReceiptSettingsDto>> =
+            Response.success(ApiResponseWrapper("success", "ok", request))
+
+        override suspend fun uploadReceiptQr(image: MultipartBody.Part): Response<ApiResponseWrapper<Map<String, String>>> =
+            Response.success(ApiResponseWrapper("success", "ok", mapOf("url" to "https://test.com/qr.jpg")))
     }
 }

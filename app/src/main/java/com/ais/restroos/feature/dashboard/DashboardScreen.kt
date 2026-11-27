@@ -76,9 +76,10 @@ fun DashboardScreen(
     onNavigateToClosedOrders: () -> Unit,
     onNavigateToHoldOrders: () -> Unit,
     onNavigateToAddExpense: () -> Unit,
+    onNavigateToUdhaarKhata: () -> Unit = {},
     onNavigateToInsights: () -> Unit,
-    onWhatsAppClick: () -> Unit,
-    onGoogleBusinessClick: () -> Unit,
+    onWhatsAppClick: () -> Unit = {},
+    onGoogleBusinessClick: () -> Unit = {},
     onPrinterStatusClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -420,6 +421,65 @@ fun DashboardScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
+
+                    // Udhaar Khata Card directly below the 3 Quick Action buttons
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onNavigateToUdhaarKhata() },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = SurfaceWhite),
+                        border = BorderStroke(1.dp, LightBorder)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color(0xFFFEF2F2)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AccountBalanceWallet,
+                                        contentDescription = "Udhaar Khata",
+                                        tint = StatusRed,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Udhaar Khata",
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            color = DarkNavy
+                                        )
+                                    )
+                                    Text(
+                                        text = "Pending customer dues & WhatsApp reminders",
+                                        style = MaterialTheme.typography.bodySmall.copy(
+                                            color = TextSecondary,
+                                            fontSize = 11.5.sp
+                                        )
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = "Open Udhaar Khata",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                 }
 
                 // C. Compact Printer Status Card
@@ -519,12 +579,6 @@ fun DashboardScreen(
                         }
                     }
                 }
-
-                // D. Features for You
-                FeaturesSection(
-                    onWhatsAppCardClick = onWhatsAppClick,
-                    onGoogleCardClick = onGoogleBusinessClick
-                )
             }
         }
     }

@@ -35,7 +35,7 @@ class DashboardViewModelTest {
     fun testInitialUiState() {
         val state = viewModel.uiState.value
         assertEquals(PrinterState.OFFLINE, state.printerState)
-        assertEquals("Siddharth Family Resturent", state.selectedBranch.name)
+        assertEquals("My Restaurant", state.selectedBranch.name)
         assertEquals(0.00, state.overview.todaySales, 0.01)
         assertEquals(0, state.overview.todayOrders)
         assertFalse(state.showBranchSelectorDialog)

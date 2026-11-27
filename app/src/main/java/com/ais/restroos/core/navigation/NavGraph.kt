@@ -84,6 +84,8 @@ import com.ais.restroos.feature.reports.ItemReportsScreen
 import com.ais.restroos.feature.reports.OrderReportsScreen
 import com.ais.restroos.feature.reports.ReportsScreen
 import com.ais.restroos.feature.reports.StockSummaryScreen
+import com.ais.restroos.feature.reports.UdhaarKhataScreen
+import com.ais.restroos.feature.settings.DigitalQrMenuScreen
 import com.ais.restroos.feature.settings.ManageStaffScreen
 import com.ais.restroos.feature.settings.MoreScreen
 import com.ais.restroos.feature.settings.PlanDetailsScreen
@@ -283,14 +285,9 @@ fun MainAppNavigation(
                         onNavigateToClosedOrders = { navController.navigate(Screen.ClosedOrders.route) },
                         onNavigateToHoldOrders = { navController.navigate(Screen.HoldOrders.route) },
                         onNavigateToAddExpense = { navController.navigate(Screen.DailyHisaab.route) },
+                        onNavigateToUdhaarKhata = { navController.navigate(Screen.UdhaarKhata.route) },
                         onNavigateToInsights = { navController.navigate(Screen.Insights.route) },
-                        onPrinterStatusClick = { navController.navigate(Screen.PrinterSetup.route) },
-                        onWhatsAppClick = {
-                            Toast.makeText(context, "Opening WhatsApp Business Marketing Hub", Toast.LENGTH_SHORT).show()
-                        },
-                        onGoogleBusinessClick = {
-                            Toast.makeText(context, "Opening Google Business AI Profile Manager", Toast.LENGTH_SHORT).show()
-                        }
+                        onPrinterStatusClick = { navController.navigate(Screen.PrinterSetup.route) }
                     )
                 }
             }
@@ -492,6 +489,9 @@ fun MainAppNavigation(
                     onNavigateToReceiptSettings = {
                         navController.navigate(Screen.ReceiptSettings.route)
                     },
+                    onNavigateToDigitalQrMenu = {
+                        navController.navigate(Screen.DigitalQrMenu.route)
+                    },
                     onNavigateToSupport = { navController.navigate(Screen.Support.route) },
                     onLogoutClick = {
                         authViewModel.logout {
@@ -544,6 +544,18 @@ fun MainAppNavigation(
 
             composable(Screen.ReceiptSettings.route) {
                 PrinterSettingsScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.DigitalQrMenu.route) {
+                DigitalQrMenuScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.UdhaarKhata.route) {
+                UdhaarKhataScreen(
                     onBackClick = { navController.popBackStack() }
                 )
             }

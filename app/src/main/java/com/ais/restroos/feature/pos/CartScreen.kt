@@ -733,6 +733,9 @@ fun CartScreen(
                         if (uiState.orderType == OrderType.DINE_IN && uiState.tableNumber.isBlank()) {
                             showTableSelectionDialog = true
                             Toast.makeText(context, "Please select a table for Dine-In", Toast.LENGTH_SHORT).show()
+                        } else if (uiState.paymentMethod == PaymentMethod.UDHAAR && uiState.customerPhone.trim().length < 10) {
+                            viewModel.openCustomerSheet()
+                            Toast.makeText(context, "Customer mobile & name required for Udhaar (Khata)", Toast.LENGTH_SHORT).show()
                         } else {
                             viewModel.completeBillingOrder(shouldPrint = false) { invNum ->
                                 onOrderCompleted(invNum)

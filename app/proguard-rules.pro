@@ -22,6 +22,13 @@
     @retrofit2.http.* <methods>;
 }
 
+# Room Database
+-keep class androidx.room.** { *; }
+-dontwarn androidx.room.**
+-keep class com.ais.restroos.data.local.entities.** { *; }
+-keep class com.ais.restroos.data.local.dao.** { *; }
+-keep class * extends androidx.room.RoomDatabase
+
 # Strip debug logs in Release builds
 -assumenosideeffects class android.util.Log {
     public static boolean isLoggable(java.lang.String, int);

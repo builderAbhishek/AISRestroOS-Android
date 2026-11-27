@@ -245,6 +245,25 @@ object EscPosPrinter {
         return finalizeReceipt(builder.buildBitmap(), effectiveWidth)
     }
 
+    fun buildBitmapReceipt(
+        title: String,
+        subtitle: String,
+        qrBitmap: Bitmap,
+        footer: String = "Powered by AISRestroOS",
+        paperWidth: String = "58mm"
+    ): ByteArray {
+        val effectiveWidth = activeReceiptSettings?.paper_width?.ifBlank { paperWidth } ?: paperWidth
+        val fontSize = activeReceiptSettings?.font_size ?: 18
+        val builder = ReceiptCanvasBuilder(effectiveWidth, fontSize)
+        builder.addCenteredText(title.uppercase(), sizeOffset = 3f, bold = true)
+        builder.addCenteredText(subtitle, sizeOffset = 0f, bold = true)
+        builder.addDivider()
+        builder.addCenteredBitmap(qrBitmap)
+        builder.addDivider()
+        builder.addCenteredText(footer, sizeOffset = -1f, bold = false)
+        return finalizeReceipt(builder.buildBitmap(), effectiveWidth)
+    }
+
     private fun finalizeReceipt(bitmap: Bitmap, paperWidth: String): ByteArray {
         val stream = ByteArrayOutputStream()
         stream.write(INIT)

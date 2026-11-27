@@ -34,7 +34,26 @@ data class CustomerSyncDto(
     val id: String? = null,
     val name: String,
     val mobile_number: String,
-    val is_regular: Boolean = false
+    val is_regular: Boolean = false,
+    val udhaar_balance: Double = 0.0
+)
+
+data class KhataEntryDto(
+    val id: String,
+    val customer_name: String,
+    val mobile_number: String,
+    val entry_type: String,
+    val amount: Double,
+    val note: String? = null,
+    val created_at: String? = null
+)
+
+data class KhataRecordRequest(
+    val customer_name: String,
+    val mobile_number: String,
+    val entry_type: String,
+    val amount: Double,
+    val note: String = ""
 )
 
 data class SyncPushResult(

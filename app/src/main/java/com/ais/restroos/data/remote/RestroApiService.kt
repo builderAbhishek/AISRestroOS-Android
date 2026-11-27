@@ -6,6 +6,8 @@ import com.ais.restroos.data.remote.dtos.CategorySyncDto
 import com.ais.restroos.data.remote.dtos.CreatePurchaseRequest
 import com.ais.restroos.data.remote.dtos.CreateStaffRequest
 import com.ais.restroos.data.remote.dtos.CustomerSyncDto
+import com.ais.restroos.data.remote.dtos.KhataEntryDto
+import com.ais.restroos.data.remote.dtos.KhataRecordRequest
 import com.ais.restroos.data.remote.dtos.DailyHisaabSummaryDto
 import com.ais.restroos.data.remote.dtos.DeviceSyncDto
 import com.ais.restroos.data.remote.dtos.ItemSalesReportDto
@@ -101,6 +103,21 @@ interface RestroApiService {
 
     @GET("customers")
     suspend fun getCustomers(): Response<ApiResponseWrapper<List<CustomerSyncDto>>>
+
+    @POST("customers")
+    suspend fun saveCustomer(
+        @Body request: CustomerSyncDto
+    ): Response<ApiResponseWrapper<CustomerSyncDto>>
+
+    @GET("customers/khata")
+    suspend fun getKhataLedger(
+        @Query("mobile") mobile: String? = null
+    ): Response<ApiResponseWrapper<List<KhataEntryDto>>>
+
+    @POST("customers/khata")
+    suspend fun recordKhataEntry(
+        @Body request: KhataRecordRequest
+    ): Response<ApiResponseWrapper<Map<String, Any?>>>
 
     @POST("customers")
     suspend fun createCustomer(

@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.PeopleOutline
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -84,6 +85,7 @@ fun MoreScreen(
     onNavigateToStaff: () -> Unit = {},
     onNavigateToPrinterSettings: () -> Unit = {},
     onNavigateToReceiptSettings: () -> Unit = {},
+    onNavigateToDigitalQrMenu: () -> Unit = {},
     onNavigateToSupport: () -> Unit = {},
     onLogoutClick: (() -> Unit)? = null,
     onBackClick: (() -> Unit)? = null,
@@ -358,8 +360,14 @@ fun MoreScreen(
                 Column {
                     SettingsRowItem(
                         icon = Icons.Default.PeopleOutline,
-                        title = "Regular Customers",
+                        title = "Manage Customers",
                         onClick = onNavigateToCustomers
+                    )
+                    HorizontalDivider(color = Color(0xFFF1F5F9), modifier = Modifier.padding(horizontal = 16.dp))
+                    SettingsRowItem(
+                        icon = Icons.Default.QrCode2,
+                        title = "Digital QR Menu",
+                        onClick = onNavigateToDigitalQrMenu
                     )
                 }
             }

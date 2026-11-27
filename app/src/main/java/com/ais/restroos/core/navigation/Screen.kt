@@ -34,4 +34,6 @@ sealed class Screen(val route: String) {
     }
     object SubscriptionExpired : Screen("subscription-expired")
     object ReceiptSettings : Screen("receipt-settings")
+    object DigitalQrMenu : Screen("more/digital-qr-menu")
+    object UdhaarKhata : Screen("reports/udhaar-khata")
 }

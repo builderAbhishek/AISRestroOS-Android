@@ -142,11 +142,16 @@ $router->get('/menu-items/{id}',         [MenuController::class, 'show'],       
 $router->delete('/menu-items/{id}',      [MenuController::class, 'destroy'],     $authTenantMiddlewares);
 $router->post('/menu-items/upload-image', [MenuController::class, 'uploadImage'], $authTenantMiddlewares);
 
-// --- 5. CUSTOMERS MODULE ---
-$router->get('/customers',        [CustomerController::class, 'index'],   $authTenantMiddlewares);
-$router->post('/customers',       [CustomerController::class, 'store'],   $authTenantMiddlewares);
-$router->get('/customers/{id}',   [CustomerController::class, 'show'],    $authTenantMiddlewares);
-$router->delete('/customers/{id}',[CustomerController::class, 'destroy'], $authTenantMiddlewares);
+// --- 5. CUSTOMERS & KHATA MODULE ---
+$router->get('/customers',        [CustomerController::class, 'index'],       $authTenantMiddlewares);
+$router->post('/customers',       [CustomerController::class, 'store'],       $authTenantMiddlewares);
+$router->get('/customers/khata',  [CustomerController::class, 'khataLedger'], $authTenantMiddlewares);
+$router->post('/customers/khata', [CustomerController::class, 'recordKhata'], $authTenantMiddlewares);
+$router->get('/customers/{id}',   [CustomerController::class, 'show'],        $authTenantMiddlewares);
+$router->delete('/customers/{id}',[CustomerController::class, 'destroy'],     $authTenantMiddlewares);
+
+// --- PUBLIC DIGITAL QR MENU ---
+$router->get('/public/menu',      [MenuController::class, 'publicWebMenu']);
 
 // --- 6. TABLES MODULE ---
 $router->get('/tables',  [TableController::class, 'index'], $authTenantMiddlewares);

@@ -48,12 +48,29 @@ fun OnHoldOrderCard(
     onCardClick: () -> Unit,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentTimeMillis: Long = System.currentTimeMillis()
 ) {
     val amountFormatted = if (order.totalAmount % 1.0 == 0.0) {
         "₹${order.totalAmount.toInt()}"
     } else {
         "₹${DecimalFormat("#,##0.00").format(order.totalAmount)}"
+    }
+
+    val elapsedMinutes = ((currentTimeMillis - order.timestamp) / 60_000L).coerceAtLeast(0L)
+    val timerLabel = when {
+        elapsedMinutes < 1L -> "⏱ Just now"
+        elapsedMinutes < 60L -> "⏱ ${elapsedMinutes}m"
+        else -> {
+            val hrs = elapsedMinutes / 60L
+            val mins = elapsedMinutes % 60L
+            "⏱ ${hrs}h ${mins}m"
+        }
+    }
+    val (timerBg, timerFg) = when {
+        elapsedMinutes >= 45L -> Color(0xFFFEF2F2) to Color(0xFFB91C1C)
+        elapsedMinutes >= 20L -> Color(0xFFFFFBEB) to Color(0xFFB45309)
+        else -> Color(0xFFECFDF5) to Color(0xFF047857)
     }
 
     Card(
@@ -111,6 +128,24 @@ fun OnHoldOrderCard(
                             color = DarkNavy
                         )
                     )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // Live Table Timer Pill
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = timerBg
+                    ) {
+                        Text(
+                            text = timerLabel,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = timerFg
+                            ),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
                 }
 
                 // Header Action Buttons: Pencil Edit + Pink/Red Delete Close Icon
@@ -150,7 +185,27 @@ fun OnHoldOrderCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            if (!order.customerName.isNullOrBlank() || !order.customerPhone.isNullOrBlank()) {
+                val custText = buildString {
+                    append("👤 ")
+                    append(order.customerName?.ifBlank { "Customer" } ?: "Customer")
+                    if (!order.customerPhone.isNullOrBlank()) {
+                        append(" • ")
+                        append(order.customerPhone)
+                    }
+                }
+                Text(
+                    text = custText,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF475569)
+                    ),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                )
+            } else {
+                Spacer(modifier = Modifier.height(14.dp))
+            }
 
             // Card Body: Horizontally scrollable product chips
             LazyRow(

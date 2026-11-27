@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp.logging)
+    implementation("com.google.zxing:core:3.5.3")
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

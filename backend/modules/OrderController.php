@@ -324,19 +324,21 @@ class OrderController
 
             // Record Payment transaction when order is COMPLETED
             if ($status === 'COMPLETED') {
+                $isUdhaar = strtoupper($paymentMethod) === 'UDHAAR';
+                $payRecStatus = $isUdhaar ? 'PENDING' : 'COMPLETED';
                 $existingPay = Database::fetchOne(
                     "SELECT id FROM payments WHERE order_id = :oid AND restaurant_id = :restro LIMIT 1",
                     ['oid' => $orderId, 'restro' => $restaurantId]
                 );
                 if ($existingPay) {
                     Database::execute(
-                        "UPDATE payments SET amount = :amt, payment_method = :pm, status = 'COMPLETED', updated_at = CURRENT_TIMESTAMP WHERE id = :id",
-                        ['amt' => $grandTotal, 'pm' => $paymentMethod, 'id' => $existingPay['id']]
+                        "UPDATE payments SET amount = :amt, payment_method = :pm, status = :pst, updated_at = CURRENT_TIMESTAMP WHERE id = :id",
+                        ['amt' => $grandTotal, 'pm' => $paymentMethod, 'pst' => $payRecStatus, 'id' => $existingPay['id']]
                     );
                 } else {
                     Database::execute(
                         "INSERT INTO payments (uuid, restaurant_id, branch_id, order_id, order_uuid, amount, payment_method, status, is_verified, paid_at, created_at, updated_at)
-                         VALUES (:puuid, :restro, :branch, :oid, :ouuid, :amt, :pm, 'COMPLETED', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                         VALUES (:puuid, :restro, :branch, :oid, :ouuid, :amt, :pm, :pst, :ver, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
                         [
                             'puuid'  => UUID::v4(),
                             'restro' => $restaurantId,
@@ -345,8 +347,48 @@ class OrderController
                             'ouuid'  => $uuid,
                             'amt'    => $grandTotal,
                             'pm'     => $paymentMethod,
+                            'pst'    => $payRecStatus,
+                            'ver'    => $isUdhaar ? 0 : 1,
                         ]
                     );
+                }
+
+                // Auto-record Udhaar Khata entry when paid via UDHAAR
+                if ($isUdhaar && !empty($customerPhone)) {
+                    CustomerController::ensureKhataTable();
+                    $existingKhata = Database::fetchOne(
+                        "SELECT id FROM customer_khata_entries WHERE order_uuid = :ouuid AND restaurant_id = :restro LIMIT 1",
+                        ['ouuid' => $uuid, 'restro' => $restaurantId]
+                    );
+                    if (!$existingKhata) {
+                        $custRow = Database::fetchOne(
+                            "SELECT id, name FROM customers WHERE mobile_number = :mob AND restaurant_id = :restro LIMIT 1",
+                            ['mob' => $customerPhone, 'restro' => $restaurantId]
+                        );
+                        $custId = $custRow['id'] ?? ('CUST-' . strtoupper(substr(UUID::v4(), 0, 8)));
+                        $custNameFinal = !empty($customerName) ? $customerName : ($custRow['name'] ?? 'Customer');
+                        if (!$custRow) {
+                            Database::execute(
+                                "INSERT INTO customers (id, restaurant_id, name, mobile_number, is_regular, created_at, updated_at)
+                                 VALUES (:id, :restro, :name, :mob, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                                ['id' => $custId, 'restro' => $restaurantId, 'name' => $custNameFinal, 'mob' => $customerPhone]
+                            );
+                        }
+                        Database::execute(
+                            "INSERT INTO customer_khata_entries (id, restaurant_id, customer_id, customer_name, mobile_number, entry_type, amount, note, order_uuid, created_at)
+                             VALUES (:id, :restro, :cid, :cname, :mob, 'UDHAAR', :amt, :note, :ouuid, CURRENT_TIMESTAMP)",
+                            [
+                                'id'     => 'KH-' . strtoupper(substr(UUID::v4(), 0, 8)),
+                                'restro' => $restaurantId,
+                                'cid'    => $custId,
+                                'cname'  => $custNameFinal,
+                                'mob'    => $customerPhone,
+                                'amt'    => $grandTotal,
+                                'note'   => 'Bill ' . ($invoiceNumber ?: $orderNumber),
+                                'ouuid'  => $uuid,
+                            ]
+                        );
+                    }
                 }
             }
 

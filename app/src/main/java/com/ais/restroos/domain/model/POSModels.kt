@@ -46,5 +46,6 @@ enum class PaymentMethod {
     PHONE_PE,
     GOOGLE_PAY,
     PAYTM,
-    CARD
+    CARD,
+    UDHAAR
 }

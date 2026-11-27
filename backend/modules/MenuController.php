@@ -367,6 +367,133 @@ class MenuController
     }
 
     /**
+     * GET /public/menu?r=AISR/01 - Public Mobile-First Digital QR Menu for Customers
+     */
+    public function publicWebMenu(Request $request): void
+    {
+        $this->ensureVariantsColumn();
+        $restaurantId = trim((string)($request->query('r') ?? ''));
+        if ($restaurantId === '') {
+            http_response_code(400);
+            echo "<h1>Restaurant ID missing</h1>";
+            exit;
+        }
+
+        $restaurant = Database::fetchOne(
+            "SELECT id, name, phone, address FROM restaurants WHERE id = :id OR REPLACE(id, '/', '') = :clean LIMIT 1",
+            ['id' => $restaurantId, 'clean' => preg_replace('/[^A-Za-z0-9]/', '', $restaurantId)]
+        );
+
+        if (!$restaurant) {
+            http_response_code(404);
+            echo "<h1>Menu not found</h1>";
+            exit;
+        }
+
+        $restroIdReal = (string)$restaurant['id'];
+        $categories = Database::fetchAll(
+            "SELECT name FROM categories WHERE restaurant_id = :restro ORDER BY display_order ASC, name ASC",
+            ['restro' => $restroIdReal]
+        );
+        $items = Database::fetchAll(
+            "SELECT name, category, price, image_url, is_veg, variants_json
+             FROM menu_items
+             WHERE restaurant_id = :restro AND COALESCE(is_available, 1) = 1
+             ORDER BY category ASC, name ASC",
+            ['restro' => $restroIdReal]
+        );
+
+        $restroName = htmlspecialchars((string)$restaurant['name'], ENT_QUOTES, 'UTF-8');
+        $restroAddr = htmlspecialchars((string)($restaurant['address'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $restroPhone = htmlspecialchars((string)($restaurant['phone'] ?? ''), ENT_QUOTES, 'UTF-8');
+
+        header('Content-Type: text/html; charset=UTF-8');
+        echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">';
+        echo "<title>{$restroName} — Digital Menu</title>";
+        echo '<style>
+            *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+            body{background:#f8fafc;color:#0f172a;padding-bottom:40px}
+            .hdr{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:20px 16px;border-radius:0 0 22px 22px;text-align:center}
+            .hdr h1{font-size:21px;font-weight:800;margin-bottom:4px}
+            .hdr p{font-size:12px;color:#cbd5e1}
+            .srch-wrap{padding:14px 16px 8px;position:sticky;top:0;background:#f8fafc;z-index:10}
+            .srch{width:100%;padding:11px 14px;border:1px solid #cbd5e1;border-radius:12px;font-size:14px;outline:none;background:#fff}
+            .cats{display:flex;gap:8px;overflow-x:auto;padding:8px 16px 12px;scrollbar-width:none}
+            .cat{padding:7px 14px;border-radius:20px;background:#fff;border:1px solid #e2e8f0;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer;color:#475569}
+            .cat.active{background:#f97316;color:#fff;border-color:#f97316}
+            .list{padding:0 16px;display:flex;flex-direction:column;gap:10px;max-width:640px;margin:0 auto}
+            .card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;box-shadow:0 1px 2px rgba(0,0,0,0.03)}
+            .veg{display:inline-block;width:11px;height:11px;border:1.5px solid #16a34a;border-radius:3px;position:relative;margin-right:6px;vertical-align:middle}
+            .veg::after{content:"";width:5px;height:5px;background:#16a34a;border-radius:50%;position:absolute;top:1.5px;left:1.5px}
+            .nonveg{border-color:#dc2626}.nonveg::after{background:#dc2626}
+            .title{font-size:15px;font-weight:700;color:#0f172a}
+            .cat-lbl{font-size:11.5px;color:#64748b;margin-top:2px}
+            .vars{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+            .vchip{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;padding:3px 8px;border-radius:8px;font-size:11.5px;font-weight:700}
+            .price{font-size:16px;font-weight:800;color:#ea580c;white-space:nowrap}
+            .thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0}
+            .ftr{text-align:center;font-size:11px;color:#94a3b8;margin-top:28px}
+        </style></head><body>';
+        echo "<div class=\"hdr\"><h1>{$restroName}</h1>";
+        if ($restroAddr !== '' || $restroPhone !== '') {
+            echo "<p>{$restroAddr}" . ($restroPhone !== '' ? " • {$restroPhone}" : '') . "</p>";
+        }
+        echo '</div>';
+        echo '<div class="srch-wrap"><input id="q" class="srch" type="search" placeholder="Search dishes..." oninput="filterMenu()"></div>';
+        echo '<div class="cats"><button class="cat active" onclick="setCat(\'ALL\',this)">All</button>';
+        foreach ($categories as $c) {
+            $cn = htmlspecialchars((string)$c['name'], ENT_QUOTES, 'UTF-8');
+            echo "<button class=\"cat\" onclick=\"setCat('{$cn}',this)\">{$cn}</button>";
+        }
+        echo '</div><div class="list" id="menuList">';
+        foreach ($items as $it) {
+            $name = htmlspecialchars((string)$it['name'], ENT_QUOTES, 'UTF-8');
+            $cat = htmlspecialchars((string)($it['category'] ?: 'General'), ENT_QUOTES, 'UTF-8');
+            $price = (float)$it['price'];
+            $priceStr = ($price == (int)$price) ? '₹' . (int)$price : '₹' . number_format($price, 2);
+            $isVeg = (int)($it['is_veg'] ?? 1) === 1;
+            $img = !empty($it['image_url']) ? htmlspecialchars((string)$it['image_url'], ENT_QUOTES, 'UTF-8') : '';
+            $vars = !empty($it['variants_json']) ? json_decode((string)$it['variants_json'], true) : [];
+            echo "<div class=\"card\" data-name=\"" . strtolower($name) . "\" data-cat=\"{$cat}\">";
+            echo '<div style="flex:1">';
+            echo '<div class="title"><span class="veg ' . ($isVeg ? '' : 'nonveg') . '"></span>' . $name . '</div>';
+            echo "<div class=\"cat-lbl\">{$cat}</div>";
+            if (is_array($vars) && count($vars) > 0) {
+                echo '<div class="vars">';
+                foreach ($vars as $v) {
+                    $vn = htmlspecialchars((string)($v['name'] ?? ''), ENT_QUOTES, 'UTF-8');
+                    $vp = (float)($v['price'] ?? 0);
+                    $vpStr = ($vp == (int)$vp) ? '₹' . (int)$vp : '₹' . number_format($vp, 2);
+                    echo "<span class=\"vchip\">{$vn}: {$vpStr}</span>";
+                }
+                echo '</div>';
+            }
+            echo '</div>';
+            if ($img !== '') {
+                echo "<img class=\"thumb\" src=\"{$img}\" alt=\"{$name}\" loading=\"lazy\">";
+            }
+            if (!is_array($vars) || count($vars) === 0) {
+                echo "<div class=\"price\">{$priceStr}</div>";
+            }
+            echo '</div>';
+        }
+        echo '</div><div class="ftr">Digital Menu • Powered by AISRestroOS</div>';
+        echo '<script>
+            let activeCat="ALL";
+            function setCat(c,el){activeCat=c;document.querySelectorAll(".cat").forEach(b=>b.classList.remove("active"));el.classList.add("active");filterMenu();}
+            function filterMenu(){
+                const q=document.getElementById("q").value.trim().toLowerCase();
+                document.querySelectorAll(".card").forEach(card=>{
+                    const mCat=(activeCat==="ALL"||card.dataset.cat===activeCat);
+                    const mQ=(!q||card.dataset.name.includes(q)||card.dataset.cat.toLowerCase().includes(q));
+                    card.style.display=(mCat&&mQ)?"flex":"none";
+                });
+            }
+        </script></body></html>';
+        exit;
+    }
+
+    /**
      * Delete old image file from storage if it exists
      */
     private function deleteOldImageFile(?string $imageUrl): void
