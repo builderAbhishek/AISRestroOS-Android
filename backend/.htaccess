@@ -1,0 +1,21 @@
+# AISRestroOS Backend Apache Rewrite Rules
+# Environment: Hostinger Apache / LiteSpeed
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Pass Authorization Header to PHP environment
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+    # Allow direct access to existing files, images, or directories in uploads
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route all other API requests to index.php
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Security: Disable Directory Indexing
+Options -Indexes
